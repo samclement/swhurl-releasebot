@@ -54,7 +54,7 @@ bot.on('message', (data) => {
         .then(getTagsFromGithub)
         .then(getTags(cmd))
         .then(getCommitsSinceLastTag)
-        .then(attemptRelease)
+        .then(createRelease)
         .catch(console.error)
     }
   }
@@ -81,7 +81,7 @@ function formatCommitMessages(m) {
   return `<${commitUrl}${hash}|${hash}>${m.substr(7,m.length)}`
 }
 
-function attemptRelease(tagsAndCommits) {
+function createRelease(tagsAndCommits) {
   const tags = tagsAndCommits.tags
   const commits = tagsAndCommits.commits
   if (commits.length == 0) {
