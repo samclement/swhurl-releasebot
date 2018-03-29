@@ -45,14 +45,14 @@ bot.on('message', (data) => {
     if (commitsCmds.includes(cmd)) {
       gitPull()
         .then(getTagsFromGithub)
-        .then(getTags(cmd))
+        .then(getLatestAndIncrementTags(cmd))
         .then(getCommitsSinceLastTag)
         .then(sendCommitsSinceLastTag)
         .catch(console.error)
     } else if (releaseCmds.includes(cmd)) {
       gitPull()
         .then(getTagsFromGithub)
-        .then(getTags(cmd))
+        .then(getLatestAndIncrementTags(cmd))
         .then(getCommitsSinceLastTag)
         .then(createRelease)
         .catch(console.error)
@@ -63,9 +63,9 @@ bot.on('message', (data) => {
 function sendCommitsSinceLastTag(tagsAndCommits) {
   const commits = tagsAndCommits.commits
   const tags = tagsAndCommits.tags
-  let message = `No commits since \`${tagify(tags.tag)}\`.`
+  let message = `No commits since \`${tagify(tags.latest)}\`.`
   if (commits.length != 0) {
-    message = `Commits since \`${tagify(tags.tag)}\`:\n`
+    message = `Commits since \`${tagify(tags.latest)}\`:\n`
     message += commits
       .split('\n')
       .filter((m) => m != '')
@@ -85,7 +85,7 @@ function createRelease(tagsAndCommits) {
   const tags = tagsAndCommits.tags
   const commits = tagsAndCommits.commits
   if (commits.length == 0) {
-    const message = `No commits since \`${tagify(tags.tag)}\`. No release created.`
+    const message = `No commits since \`${tagify(tags.latest)}\`. No release created.`
     bot.postMessageToUser('sam', message, (data) => {
       if (data.ok) console.log(data.message.text)
       else console.log(data)
@@ -93,9 +93,9 @@ function createRelease(tagsAndCommits) {
   } else {
     const postUrl = `https://${github}@${REPO_URL}`
     const payload = {
-      tag_name: `${tagify(tags.newTag)}`,
+      tag_name: `${tagify(tags.increment)}`,
       target_commitish: `master`,
-      name: `Version ${tags.newTag} release`,
+      name: `Version ${tags.increment} release`,
       body: commits
     }
     console.log(`payload: ${JSON.stringify(payload)}`)
@@ -134,22 +134,22 @@ function getTagsFromGithub() {
   })
 }
 
-function getTags(cmd) {
+function getLatestAndIncrementTags(cmd) {
   return function(res) {
     return new Promise((resolve, reject) => {
       if (!res.data) {
         reject(res)
       } else {
-        const tag = res.data.map((r) => r.tag_name.replace('v', '')).sort(cmp).pop()
-        const newTag = semver.inc(tag, cmd)
-        resolve({tag, newTag})
+        const latest = res.data.map((r) => r.tag_name.replace('v', '')).sort(cmp).pop()
+        const increment = semver.inc(latest, cmd)
+        resolve({latest, increment})
       }
     })
   }
 }
 
 function getCommitsSinceLastTag(tags) {
-  const logCmd = `git --no-pager log --oneline v${tags.tag}..HEAD`
+  const logCmd = `git --no-pager log --oneline v${tags.latest}..HEAD`
   return new Promise((resolve, reject) => {
     cp.exec(logCmd, { cwd: './repo/swhurl-website' }, (err, stdout, stderr) => {
       console.log(`stdout: ${stdout}`)
