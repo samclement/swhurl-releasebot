@@ -63,9 +63,9 @@ bot.on('message', (data) => {
 function sendCommitsSinceLastTag(tagsAndCommits) {
   const commits = tagsAndCommits.commits
   const tags = tagsAndCommits.tags
-  let message = `No commits since \`${tags.tag}\`.`
+  let message = `No commits since \`${tagify(tags.tag)}\`.`
   if (commits.length != 0) {
-    message = `Commits since \`${tags.tag}\`:\n`
+    message = `Commits since \`${tagify(tags.tag)}\`:\n`
     message += commits
       .split('\n')
       .filter((m) => m != '')
@@ -85,7 +85,7 @@ function attemptRelease(tagsAndCommits) {
   const tags = tagsAndCommits.tags
   const commits = tagsAndCommits.commits
   if (commits.length == 0) {
-    const message = `No commits since \`${tags.tag}\`. No release created.`
+    const message = `No commits since \`${tagify(tags.tag)}\`. No release created.`
     bot.postMessageToUser('sam', message, (data) => {
       if (data.ok) console.log(data.message.text)
       else console.log(data)
@@ -93,7 +93,7 @@ function attemptRelease(tagsAndCommits) {
   } else {
     const postUrl = `https://${github}@${REPO_URL}`
     const payload = {
-      tag_name: `v${tags.newTag}`,
+      tag_name: `${tagify(tags.newTag)}`,
       target_commitish: `master`,
       name: `Version ${tags.newTag} release`,
       body: commits
@@ -160,4 +160,8 @@ function getCommitsSinceLastTag(tags) {
       }
     })
   })
+}
+
+function tagify(tag) {
+  return `v${tag}`
 }
