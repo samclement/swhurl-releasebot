@@ -9,13 +9,8 @@ const semver = require('semver')
 const token = process.env.TOKEN || null
 const github = process.env.GITHUB_USER || null
 // constants
-const MAJOR = `major`
-const MINOR = `minor`
-const PATCH = `patch`
-const NOT_LIVE = `notlive`
-const STAGED = 'staged'
-const commitsCmds = [NOT_LIVE, STAGED]
-const releaseCmds = [MAJOR, MINOR, PATCH]
+const commitsCmds = [`notlive`, `staged`, `staging`, `integration`]
+const releaseCmds = [`major`, `minor`, `patch`]
 const REPO_URL = 'api.github.com/repos/samclement/swhurl-website/releases'
 
 const bot = new SlackBot({
