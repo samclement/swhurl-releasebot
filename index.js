@@ -36,7 +36,6 @@ bot.on('start', () => {
 bot.on('message', (data) => {
   if (data.subtitle && data.subtitle == 'sam') { // only dms from 'sam'
     const cmd = data.content.toLowerCase().replace(' ', '')
-    console.log(cmd, releaseCmds.includes(cmd))
     if (commitsCmds.includes(cmd)) {
       gitPull()
         .then(getTagsFromGithub)
