@@ -5,6 +5,7 @@ const SlackBot = require('slackbots')
 const axios = require('axios')
 const cmp = require('semver-compare')
 const semver = require('semver')
+const debug = require('debug')('releasebot')
 // env variables
 const token = process.env.TOKEN || null
 const github = process.env.GITHUB_USER || null
@@ -19,16 +20,16 @@ const bot = new SlackBot({
 })
 
 bot.on('start', () => {
-  console.log(`relasebot online!`)
+  console.log(`start: relasebot online!`)
   if (!fs.existsSync('./repo/swhurl-website/.git')) {
     const cloneCmd = 'git clone https://github.com/samclement/swhurl-website.git'
     cp.exec(cloneCmd, { cwd: './repo' }, (err, stdout, stderr) => {
-      if (err) console.log(err)
-      else console.log('clone successful')
+      if (err) console.error(err)
+      else console.log('start: clone successful.')
     })
   } else {
+    console.log('start: try git pull')
     gitPull()
-      .then(console.log)
       .catch(console.error)
   }
 })
@@ -36,6 +37,7 @@ bot.on('start', () => {
 bot.on('message', (data) => {
   if (data.subtitle && data.subtitle == 'sam') { // only dms from 'sam'
     const cmd = data.content.toLowerCase().replace(' ', '')
+    debug(`message recieved: '${cmd}'.`)
     if (commitsCmds.includes(cmd)) {
       gitPull()
         .then(getTagsFromGithub)
@@ -58,6 +60,7 @@ function sendCommitsSinceLastTag(tagsAndCommits) {
   const commits = tagsAndCommits.commits
   const tags = tagsAndCommits.tags
   let message = `No commits since \`${tagify(tags.latest)}\`.`
+  debug(`send commits since last tag: %O`, tagsAndCommits)
   if (commits.length != 0) {
     message = `Commits since \`${tagify(tags.latest)}\`:\n`
     message += commits
@@ -66,13 +69,8 @@ function sendCommitsSinceLastTag(tagsAndCommits) {
       .map(formatCommitMessages)
       .join('\n')
   }
+  console.log(`send commits since %s: %s`, tagify(tags.latest), commits || 'none')
   bot.postMessageToUser('sam', message)
-}
-
-function formatCommitMessages(m) {
-  const commitUrl = 'https://github.com/samclement/swhurl-website/commit/'
-  const hash = m.substr(0,7)
-  return `<${commitUrl}${hash}|${hash}>${m.substr(7,m.length)}`
 }
 
 function createRelease(tagsAndCommits) {
@@ -81,8 +79,8 @@ function createRelease(tagsAndCommits) {
   if (commits.length == 0) {
     const message = `No commits since \`${tagify(tags.latest)}\`. No release created.`
     bot.postMessageToUser('sam', message, (data) => {
-      if (data.ok) console.log(data.message.text)
-      else console.log(data)
+      if (data.ok) console.log(`create release - no commits: %s`, data.message.text)
+      else console.error(`create release: %O`, data)
     })
   } else {
     const postUrl = `https://${github}@${REPO_URL}`
@@ -92,10 +90,11 @@ function createRelease(tagsAndCommits) {
       name: `Version ${tags.increment} release`,
       body: commits
     }
-    console.log(`payload: ${JSON.stringify(payload)}`)
+    debug(`create release - payload: %0`, payload)
     axios.post(postUrl, payload)
       .then((res) => {
         const d = res.data
+        console.log(`create release - github response: %O`, d)
         bot.postMessageToUser(
           'sam',
           `\`${d.tag_name}\` created from \`${d.target_commitish}\``
@@ -104,15 +103,21 @@ function createRelease(tagsAndCommits) {
   }
 }
 
+function formatCommitMessages(m) {
+  const commitUrl = 'https://github.com/samclement/swhurl-website/commit/'
+  const hash = m.substr(0,7)
+  return `<${commitUrl}${hash}|${hash}>${m.substr(7,m.length)}`
+}
+
 function gitPull() {
   return new Promise((resolve, reject) => {
     const pullCmd = `git pull origin master --rebase`
     cp.exec(pullCmd, { cwd: `./repo/swhurl-website` }, (err, stdout, stderr) => {
       if (err) {
-        console.log(err)
+        console.error(err)
         reject(err)
       } else {
-        console.log(stdout || stderr)
+        debug(`git pull: %s`, stdout)
         resolve(stdout)
       }
     })
@@ -136,7 +141,9 @@ function getLatestAndIncrementTags(cmd) {
       } else {
         const latest = res.data.map((r) => r.tag_name.replace('v', '')).sort(cmp).pop()
         const increment = semver.inc(latest, cmd)
-        resolve({latest, increment})
+        const tags = { latest, increment }
+        debug(`get latest and increment tags: %O`, tags)
+        resolve(tags)
       }
     })
   }
@@ -146,7 +153,7 @@ function getCommitsSinceLastTag(tags) {
   const logCmd = `git --no-pager log --oneline v${tags.latest}..HEAD`
   return new Promise((resolve, reject) => {
     cp.exec(logCmd, { cwd: './repo/swhurl-website' }, (err, stdout, stderr) => {
-      console.log(`stdout: ${stdout}`)
+      debug(`get commits since %s: %s`, tagify(tags.latest), stdout || 'none')
       if (err || stderr) {
         reject(err || stderr)
       } else {
