@@ -125,27 +125,16 @@ function gitPull() {
 }
 
 function getTagsFromGithub() {
-  return new Promise((resolve, reject) => {
-    axios.get(`https://${REPO_URL}`)
-      .then((res) => {
-        resolve(res)
-      })
-  })
+  return axios.get(`https://${REPO_URL}`)
 }
 
 function getLatestAndIncrementTags(cmd) {
-  return function(res) {
-    return new Promise((resolve, reject) => {
-      if (!res.data) {
-        reject(res)
-      } else {
-        const latest = res.data.map((r) => r.tag_name.replace('v', '')).sort(cmp).pop()
-        const increment = semver.inc(latest, cmd)
-        const tags = { latest, increment }
-        debug(`get latest and increment tags: %O`, tags)
-        resolve(tags)
-      }
-    })
+  return async (res) => {
+    const latest = res.data.map((r) => r.tag_name.replace('v', '')).sort(cmp).pop()
+    const increment = semver.inc(latest, cmd)
+    const tags = { latest, increment }
+    debug(`get latest and increment tags: %O`, tags)
+    return await tags
   }
 }
 
