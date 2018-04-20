@@ -111,7 +111,7 @@ function formatCommitMessages(m) {
 
 function gitPull() {
   return new Promise((resolve, reject) => {
-    const pullCmd = `git pull origin master --rebase`
+    const pullCmd = `git fetch --tags && git pull origin master --rebase`
     cp.exec(pullCmd, { cwd: `./repo/swhurl-website` }, (err, stdout, stderr) => {
       if (err) {
         console.error(err)
