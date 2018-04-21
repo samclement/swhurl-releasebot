@@ -56,6 +56,14 @@ bot.on('message', (data) => {
   }
 })
 
+bot.on('error', (err) => {
+  console.error(`bot error: ${err}`)
+})
+
+bot.on('close', (data) => {
+  console.log(`bot close: ${data}`)
+})
+
 function sendCommitsSinceLastTag(tagsAndCommits) {
   const commits = tagsAndCommits.commits
   const tags = tagsAndCommits.tags
