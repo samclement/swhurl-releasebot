@@ -1,6 +1,6 @@
 # Release Bot
 
-Responds to `major`, `minor` or `patch` messages and will create a new release on github for swhurl-website. Release webhooks will then deploy to production via drone.swhurl.com.
+Responds to `major`, `minor` or `patch` messages and will create a new release on github for swhurl-website. 
 
 Commands:
 
@@ -15,5 +15,5 @@ Environment variables:
 Docker: 
 
 - `docker build -t registry.swhurl.com/swhurl/releasebot .`
-- `docker run --name releasebot --restart always --init -d -e TOKEN=<MY_TOKEN> -e GITHUB_USER=<MY_GITHUB_USER> registry.swhurl.com/swhurl/releasebot`
+- `docker run --name releasebot --restart always --init -d -e TOKEN=<MY_TOKEN> -e GITHUB_USER=<MY_GITHUB_USER> swhurl/releasebot`
 
