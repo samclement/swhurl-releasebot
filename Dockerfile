@@ -5,5 +5,6 @@ RUN apk --no-cache add git \
 WORKDIR /www
 COPY . /www/
 RUN npm i
+RUN chown -R node /www/
 USER node
 CMD ["npm", "start"]
