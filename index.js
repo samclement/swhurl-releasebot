@@ -15,25 +15,28 @@ const github = process.env.GITHUB_USER || null
 const commitsCmds = [`notlive`, `staged`, `staging`, `integration`, `unreleased`]
 const releaseCmds = [`major`, `minor`, `patch`]
 const REPO_URL = 'api.github.com/repos/samclement/swhurl-website/releases'
+const CLONE_PATH = './repo/swhurl-website/.git'
 
 const bot = new SlackBot({
   token,
   name: 'releasebot'
 })
 
+// Clone repo
+if (!fs.existsSync(CLONE_PATH)) {
+  const cloneCmd = 'git clone https://github.com/samclement/swhurl-website.git'
+  cp.exec(cloneCmd, { cwd: './repo' }, (err, stdout, stderr) => {
+    if (err) console.error(err)
+    else console.log('start: clone successful.')
+  })
+} else {
+  console.log('start: try git pull')
+  gitPull()
+    .catch(console.error)
+}
+
 bot.on('start', () => {
   console.log(`start: relasebot online!`)
-  if (!fs.existsSync('./repo/swhurl-website/.git')) {
-    const cloneCmd = 'git clone https://github.com/samclement/swhurl-website.git'
-    cp.exec(cloneCmd, { cwd: './repo' }, (err, stdout, stderr) => {
-      if (err) console.error(err)
-      else console.log('start: clone successful.')
-    })
-  } else {
-    console.log('start: try git pull')
-    gitPull()
-      .catch(console.error)
-  }
 })
 
 bot.on('message', (data) => {
