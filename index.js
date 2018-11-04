@@ -6,11 +6,13 @@ const axios = require('axios')
 const cmp = require('semver-compare')
 const semver = require('semver')
 const debug = require('debug')('releasebot')
+
 // env variables
 const token = process.env.TOKEN || null
 const github = process.env.GITHUB_USER || null
+
 // constants
-const commitsCmds = [`notlive`, `staged`, `staging`, `integration`]
+const commitsCmds = [`notlive`, `staged`, `staging`, `integration`, `unreleased`]
 const releaseCmds = [`major`, `minor`, `patch`]
 const REPO_URL = 'api.github.com/repos/samclement/swhurl-website/releases'
 

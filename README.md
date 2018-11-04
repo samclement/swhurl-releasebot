@@ -5,7 +5,7 @@ Responds to `major`, `minor` or `patch` messages and will create a new release o
 Commands:
 
 - `major|minor|patch` creates a new incremented release and tag on github
-- `not live` returns list of commits since last tag
+- `unreleased` returns list of commits since last tag
 
 Environment variables:
 
