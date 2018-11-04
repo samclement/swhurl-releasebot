@@ -11,9 +11,10 @@ Environment variables:
 
 - `TOKEN` - slackbot token
 - `GITHUB_USER` - github `username`:`password|psersonal_access_token`
+- `CIRCLECI_API_KEY` - circleci api key
 
 Docker: 
 
 - `docker build -t registry.swhurl.com/swhurl/releasebot .`
-- `docker run --name releasebot --restart always --init -d -e TOKEN=<MY_TOKEN> -e GITHUB_USER=<MY_GITHUB_USER> swhurl/releasebot`
+- `docker run --name releasebot --restart always --init -d -e TOKEN=<MY_TOKEN> -e GITHUB_USER=<MY_GITHUB_USER> -e CIRCLECI_API_KEY=<MY_CIRCLECI_API_KEY> swhurl/releasebot`
 

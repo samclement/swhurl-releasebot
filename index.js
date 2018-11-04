@@ -3,6 +3,7 @@ const fs = require('fs')
 const cp = require('child_process')
 const SlackBot = require('slackbots')
 const axios = require('axios')
+const qs = require('querystring')
 const cmp = require('semver-compare')
 const semver = require('semver')
 const debug = require('debug')('releasebot')
@@ -10,6 +11,7 @@ const debug = require('debug')('releasebot')
 // env variables
 const token = process.env.TOKEN || null
 const github = process.env.GITHUB_USER || null
+const circleci = process.env.CIRCLECI_API_KEY || null
 
 // constants
 const commitsCmds = [`notlive`, `staged`, `staging`, `integration`, `unreleased`]
@@ -57,6 +59,31 @@ bot.on('message', (data) => {
         .then(getCommitsSinceLastTag)
         .then(createRelease)
         .catch(console.error)
+    } else if (cmd.includes(`deploy`)) {
+      console.log(cmd)
+      const tag = cmd.substr(6, cmd.length)
+      axios.get(`https://api.github.com/repos/samclement/swhurl-website/releases/tags/v${tag}`)
+        .then((res) => {
+          const postUrl = `https://${circleci}:@circleci.com/api/v1.1/project/github/samclement/swhurl-website/tree/master`
+          const payload = { 'build_parameters[CIRCLE_JOB]': 'release_tag', 'build_parameters[CIRCLE_TAG]': tag }
+          axios.post(postUrl, qs.stringify(payload))
+            .then((res) => {
+              const d = res.data
+              const message = `Deploying ${tagify(tag)}`
+              bot.postMessageToUser(
+                'sam',
+                message
+            ).catch(console.error)
+          })
+        }).catch((err) => {
+          Object.keys(err).forEach((key) => console.log)
+          const message = err.response && err.response.status == 404 ? `Tag not found` : err.toString()
+          bot.postMessageToUser(
+            'sam',
+            message
+          )
+          console.error(err)
+        })
     }
   }
 })
