@@ -1,3 +1,4 @@
 node_modules
 repo/*
 !repo/.gitkeep
+tags
