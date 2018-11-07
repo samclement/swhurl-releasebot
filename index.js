@@ -41,6 +41,14 @@ bot.on('start', () => {
   console.log(`start: relasebot online!`)
 })
 
+bot.on('close', () => {
+  console.log('closed')
+})
+
+bot.on('error', (err) => {
+  console.error(err)
+})
+
 bot.on('message', (data) => {
   if (data.subtitle && data.subtitle == 'sam') { // only dms from 'sam'
     const cmd = data.content.toLowerCase().replace(' ', '')
