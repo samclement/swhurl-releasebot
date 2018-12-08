@@ -15,6 +15,7 @@ Environment variables:
 
 Docker: 
 
-- `docker build -t registry.swhurl.com/swhurl/releasebot .`
+- `docker build -t swhurl/releasebot .`
+- `docker push swhurl/releasebot`
 - `docker run --name releasebot --restart always --init -d -e TOKEN=<MY_TOKEN> -e GITHUB_USER=<MY_GITHUB_USER> -e CIRCLECI_API_KEY=<MY_CIRCLECI_API_KEY> swhurl/releasebot`
 
