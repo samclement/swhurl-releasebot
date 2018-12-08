@@ -70,20 +70,10 @@ bot.on('message', (data) => {
     } else if (cmd.includes(`deploy`)) {
       console.log(cmd)
       const tag = cmd.substr(6, cmd.length)
-      axios.get(`https://api.github.com/repos/samclement/swhurl-website/releases/tags/v${tag}`)
-        .then((res) => {
-          const postUrl = `https://${circleci}:@circleci.com/api/v1.1/project/github/samclement/swhurl-website/tree/master`
-          const payload = { 'build_parameters[CIRCLE_JOB]': 'release_tag', 'build_parameters[CIRCLE_TAG]': tag }
-          axios.post(postUrl, qs.stringify(payload))
-            .then((res) => {
-              const d = res.data
-              const message = `Deploying ${tagify(tag)}`
-              bot.postMessageToUser(
-                'sam',
-                message
-            ).catch(console.error)
-          })
-        }).catch((err) => {
+      getTag(tag)
+        .then(startJob(tag))
+        .then(sendMessage(tag))
+        .catch((err) => {
           Object.keys(err).forEach((key) => console.log)
           const message = err.response && err.response.status == 404 ? `Tag not found` : err.toString()
           bot.postMessageToUser(
@@ -202,4 +192,24 @@ function getCommitsSinceLastTag(tags) {
 
 function tagify(tag) {
   return `v${tag}`
+}
+
+// Deploy
+
+function getTag(tag) {
+  return axios.get(`https://api.github.com/repos/samclement/swhurl-website/releases/tags/v${tag}`)
+}
+
+function startJob(tag) {
+  const postUrl = `https://${circleci}:@circleci.com/api/v1.1/project/github/samclement/swhurl-website/tree/master`
+  const payload = { 'build_parameters[CIRCLE_JOB]': 'release_tag', 'build_parameters[CIRCLE_TAG]': tag }
+  return axios.post(postUrl, qs.stringify(payload))
+}
+
+function sendMessage(tag) {
+  const message = `Deploying ${tagify(tag)}`
+  return bot.postMessageToUser(
+    'sam',
+    message
+  )
 }
